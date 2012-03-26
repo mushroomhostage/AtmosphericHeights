@@ -65,11 +65,45 @@ import net.minecraft.server.CraftingManager;
 import org.bukkit.craftbukkit.enchantments.CraftEnchantment;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
 
+class ThinnerAirListener implements Listener {
+	ThinnerAir plugin;
+
+	public ThinnerAirListener(ThinnerAir plugin) {
+		this.plugin = plugin;
+
+		Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
+	}
+
+    @EventHandler(priority=EventPriority.MONITOR, ignoreCancelled=true) 
+    public void onFoodLevelChange(FoodLevelChangeEvent event) {
+        HumanEntity entity = event.getEntity();
+
+        if (!(entity instanceof Player)) {
+            return;
+        }
+
+        int oldLevel = ((Player)entity).getFoodLevel();
+        int newLevel = event.getFoodLevel();
+
+        int diff = oldLevel - newLevel;
+
+        plugin.log.info("diff = " + diff);
+
+        int height = entity.getLocation().getBlockY();
+
+        if (height > 128) {
+            diff *= (height - 128) / 10; // TODO: reasonable scale
+        }
+
+        event.setFoodLevel(oldLevel - diff);
+    }
+}
+
 public class ThinnerAir extends JavaPlugin implements Listener {
     Logger log = Logger.getLogger("Minecraft");
 
-
     public void onEnable() {
+        new ThinnerAirListener(this);
     }
 
     public void onDisable() {
