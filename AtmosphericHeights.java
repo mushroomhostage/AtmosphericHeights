@@ -68,8 +68,16 @@ import org.bukkit.craftbukkit.inventory.CraftItemStack;
 class AtmosphericHeightsListener implements Listener {
 	AtmosphericHeights plugin;
 
+    final int tropopause, mesopause, magnetopause;
+
 	public AtmosphericHeightsListener(AtmosphericHeights plugin) {
 		this.plugin = plugin;
+
+        tropopause = plugin.getConfig().getInt("tropopause", 128);
+        mesopause = plugin.getConfig().getInt("mesopause", 256);
+        magnetopause = plugin.getConfig().getInt("magnetopause", 512);
+        // TODO: kalman line, 1024? = legally in outerspace
+        // for inspiration see http://en.wikipedia.org/wiki/Earth%27s_atmosphere#Principal_layers
 
 		Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
 	}
@@ -85,17 +93,32 @@ class AtmosphericHeightsListener implements Listener {
         int oldLevel = ((Player)entity).getFoodLevel();
         int newLevel = event.getFoodLevel();
 
-        int diff = oldLevel - newLevel;
+        // hunger change in half hearts
+        int delta = oldLevel - newLevel;
 
-        plugin.log.info("diff = " + diff);
+        plugin.log.info("Hunger change: " + oldLevel + " -> " + newLevel + " (delta = "+delta+")");
+
+        if (delta < 0) {
+            // increased = ate, do nothing
+            return;
+        }
 
         int height = entity.getLocation().getBlockY();
 
-        if (height > 128) {
-            diff *= (height - 128) / 10; // TODO: reasonable scale
+
+        if (height > tropopause) {
+            double above = height - tropopause;
+            plugin.log.info("above "+above);
+            double extra = Math.ceil(above / plugin.getConfig().getDouble("hungerPerMeter", 10.0));
+
+            delta += extra;
+            plugin.log.info("new delta = " + delta);
         }
 
-        event.setFoodLevel(oldLevel - diff);
+        newLevel = oldLevel - delta;
+        plugin.log.info("set level: " + newLevel);
+        event.setFoodLevel(newLevel);
+        plugin.log.info("\n");
     }
 }
 
@@ -103,6 +126,10 @@ public class AtmosphericHeights extends JavaPlugin implements Listener {
     Logger log = Logger.getLogger("Minecraft");
 
     public void onEnable() {
+        getConfig().options().copyDefaults(true);
+        saveConfig();
+        reloadConfig();
+
         new AtmosphericHeightsListener(this);
     }
 
