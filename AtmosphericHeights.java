@@ -107,36 +107,69 @@ class AtmosphericHeightsListener implements Listener {
 
         int height = player.getLocation().getBlockY();
 
-
-        // Thinner air, more hungry
         if (height > tropopause) {
-            double moreHunger = Math.ceil((height - tropopause) / plugin.getConfig().getDouble("hungerPerMeter", 10.0));
-
-            delta += moreHunger ;
-            plugin.log("Above tropopause, new hunger delta = " + delta);
-
-            newLevel = oldLevel - delta;
-            plugin.log("set level: " + newLevel);
-            event.setFoodLevel(newLevel);
-
+            applyHunger(player, event, delta, height, oldLevel);
         }
 
-        // Meteors or no air, suffocating
+
         if (height > mesopause) {
-            if (player.getHealth() >= plugin.getConfig().getInt("damageWhenHealthMin", 2)) {
-                int damage = (int)Math.ceil((height - mesopause) / plugin.getConfig().getDouble("damagePerMeter", 10.0));
-                damage = Math.max(damage, plugin.getConfig().getInt("damageMax", 10));
-
-                player.damage(damage);
-                player.setLastDamageCause(new EntityDamageEvent(player, EntityDamageEvent.DamageCause.SUFFOCATION, damage));
-                plugin.log("Above mesopause, suffocation damage = " + damage);
-            }
+            applySuffocation(player, height);
         }
 
-        // Cosmic rays, unprotected from earth's magnetic field, set aflame
         if (height > magnetopause) {
-            player.setFireTicks(plugin.getConfig().getInt("fireTicks", 20*2));
+            applyFire(player, height);
         }
+    }
+
+    // Thinner air, hungrier
+    private void applyHunger(Player player, FoodLevelChangeEvent event, int delta, int height, int oldLevel) {
+        double moreHunger = Math.ceil((height - tropopause) / plugin.getConfig().getDouble("hungerPerMeter", 10.0));
+
+        delta += moreHunger;
+        plugin.log("Above tropopause, new hunger delta = " + delta);
+
+        int newLevel = oldLevel - delta;
+        plugin.log("set level: " + newLevel);
+        event.setFoodLevel(newLevel);
+    }
+
+    // Meteors or no air, suffocating
+    private void applySuffocation(Player player, int height) {
+        if (player.getHealth() < plugin.getConfig().getInt("damageWhenHealthMin", 2)) {
+            return;  // you've been spared
+        }
+
+
+        int damage = (int)Math.ceil((height - mesopause) / plugin.getConfig().getDouble("damagePerMeter", 10.0));
+        damage = Math.max(damage, plugin.getConfig().getInt("damageMax", 10));
+
+        if (hasOxygenMask(player)) {
+            plugin.log("Player "+player+" wearing oxygen mask, avoided suffocation damage "+damage);
+        }
+
+        player.damage(damage);
+        player.setLastDamageCause(new EntityDamageEvent(player, EntityDamageEvent.DamageCause.SUFFOCATION, damage));
+        plugin.log("Above mesopause, suffocation damage = " + damage);
+    }
+
+    // Cosmic rays, unprotected from earth's magnetic field, set aflame
+    private void applyFire(Player player, int height) {
+        player.setFireTicks(plugin.getConfig().getInt("fireTicks", 20*2));
+    }
+
+    final Enchantment RESPIRATION = Enchantment.OXYGEN;
+
+    private boolean hasOxygenMask(Player player) {
+        ItemStack helmet = player.getInventory().getHelmet();
+
+        return helmet != null 
+            && plugin.getConfig().getBoolean("oxygenMaskEnabled", true)
+            && helmet.containsEnchantment(RESPIRATION) 
+            && helmet.getEnchantmentLevel(RESPIRATION) > plugin.getConfig().getInt("oxygenMaskMinLevel", 1);
+    }
+
+    private boolean hasSpacesuit(Player player) {
+        return false; // TODO
     }
 }
 
