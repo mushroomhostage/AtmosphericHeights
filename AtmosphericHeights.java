@@ -148,13 +148,12 @@ class AtmosphericHeightsListener implements Listener {
 
     // Meteors or no air, suffocating
     private void applySuffocation(Player player, int height) {
-        if (player.getHealth() < plugin.getConfig().getInt("damageWhenHealthMin", 2)) {
-            return;  // you've been spared
-        }
-
-
         int damage = (int)Math.ceil((height - mesopause) / plugin.getConfig().getDouble("damagePerMeter", 10.0));
         damage = Math.max(damage, plugin.getConfig().getInt("damageMax", 10));
+
+        if (player.getHealth() - damage < plugin.getConfig().getInt("damageHealthMin", 2)) {
+            return; // you've been spared - can't go further
+        }
 
         if (hasOxygenMask(player)) {
             //plugin.log("Player "+player+" wearing oxygen mask, avoided suffocation damage "+damage);
