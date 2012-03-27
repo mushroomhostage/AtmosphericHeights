@@ -180,22 +180,74 @@ class AtmosphericHeightsListener implements Listener {
             return;
         }
 
-        player.setFireTicks(plugin.getConfig().getInt("fireTicks", 20*2));
+        ItemStack spacesuit = getSpacesuit(player);
+
+        if (spacesuit == null) {
+            // exposed to the elements!
+            player.setFireTicks(plugin.getConfig().getInt("fireTicks", 20*2));
+        } else {
+            // damage suit
+            // TODO
+            short damage = spacesuit.getDurability();
+
+            damage -= plugin.getConfig().getInt("spacesuitDamagePerHit", 100);
+            damage = (short)Math.min(damage, plugin.getConfig().getInt("spacesuitDamageMin", 10));
+                
+            spacesuit.setDurability(damage);
+        }
     }
 
     final Enchantment RESPIRATION = Enchantment.OXYGEN;
 
     private boolean hasOxygenMask(Player player) {
+        if (!plugin.getConfig().getBoolean("oxygenMaskEnabled", true)) {
+            return false;
+        }
         ItemStack helmet = player.getInventory().getHelmet();
 
         return helmet != null 
-            && plugin.getConfig().getBoolean("oxygenMaskEnabled", true)
             && helmet.containsEnchantment(RESPIRATION) 
             && helmet.getEnchantmentLevel(RESPIRATION) >= plugin.getConfig().getInt("oxygenMaskMinLevel", 1);
     }
 
-    private boolean hasSpacesuit(Player player) {
-        return false; // TODO
+    // Get a random piece of a player's spacesuit, or null if not wearing any
+    private ItemStack getSpacesuit(Player player) {
+        if (!plugin.getConfig().getBoolean("spacesuitEnabled", true)) {
+            return null;
+        }
+
+        PlayerInventory inventory = player.getInventory();
+
+        ItemStack helmet = inventory.getHelmet();
+        ItemStack chestplate = inventory.getChestplate();
+        ItemStack leggings = inventory.getLeggings();
+        ItemStack boots = inventory.getBoots();
+
+        if (helmet == null || chestplate == null || leggings == null || boots == null) {
+            // incomplete suit
+            plugin.log("incomplete suit");
+            return null;
+        }
+
+        /* TODO: tell if suit is all made of same material? all different type ids even though all diamond..
+        int type = helmet.getTypeId();
+        if (chestplate.getTypeId() != type || leggings.getTypeId() != type || boots.getTypeId() != type) {
+            // mixed suit, not acceptable - must be all same material
+            plugin.log("mixed suit");
+            return null;
+        }
+        */
+        // TODO: craftable or with enchantments? protection? but could get complex, four-part suit..
+
+        // Return random part of suit to damage
+        // TODO: weights for different pieces? since provide different protection..
+        switch (random.nextInt(4)) {
+        case 0: return helmet;
+        case 1: return chestplate;
+        case 2: return leggings;
+        default:
+        case 3: return boots;
+        }
     }
 }
 
