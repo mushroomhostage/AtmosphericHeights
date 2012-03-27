@@ -96,7 +96,7 @@ class AtmosphericHeightsListener implements Listener {
         // hunger change in half hearts
         int delta = oldLevel - newLevel;
 
-        plugin.log.info("Hunger change: " + oldLevel + " -> " + newLevel + " (delta = "+delta+")");
+        plugin.log("Hunger change: " + oldLevel + " -> " + newLevel + " (delta = "+delta+")");
 
         if (delta < 0) {
             // increased = ate, do nothing
@@ -106,19 +106,19 @@ class AtmosphericHeightsListener implements Listener {
         int height = entity.getLocation().getBlockY();
 
 
+        // Thinner air, more hungry
         if (height > tropopause) {
             double above = height - tropopause;
-            plugin.log.info("above "+above);
+            plugin.log("above "+above);
             double extra = Math.ceil(above / plugin.getConfig().getDouble("hungerPerMeter", 10.0));
 
             delta += extra;
-            plugin.log.info("new delta = " + delta);
-        }
+            plugin.log("new delta = " + delta);
 
-        newLevel = oldLevel - delta;
-        plugin.log.info("set level: " + newLevel);
-        event.setFoodLevel(newLevel);
-        plugin.log.info("\n");
+            newLevel = oldLevel - delta;
+            plugin.log("set level: " + newLevel);
+            event.setFoodLevel(newLevel);
+        }
     }
 }
 
@@ -134,6 +134,12 @@ public class AtmosphericHeights extends JavaPlugin implements Listener {
     }
 
     public void onDisable() {
+    }
+
+    public void log(String message) {
+        if (getConfig().getBoolean("verbose", true)) {
+            log.info(message);
+        }
     }
 
 }
