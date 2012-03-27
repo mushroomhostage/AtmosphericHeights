@@ -90,7 +90,9 @@ class AtmosphericHeightsListener implements Listener {
             return;
         }
 
-        int oldLevel = ((Player)entity).getFoodLevel();
+        Player player = (Player)entity;
+
+        int oldLevel = player.getFoodLevel();
         int newLevel = event.getFoodLevel();
 
         // hunger change in half hearts
@@ -103,22 +105,34 @@ class AtmosphericHeightsListener implements Listener {
             return;
         }
 
-        int height = entity.getLocation().getBlockY();
+        int height = player.getLocation().getBlockY();
 
 
         // Thinner air, more hungry
         if (height > tropopause) {
-            double above = height - tropopause;
-            plugin.log("above "+above);
-            double extra = Math.ceil(above / plugin.getConfig().getDouble("hungerPerMeter", 10.0));
+            double moreHunger = Math.ceil((height - tropopause) / plugin.getConfig().getDouble("hungerPerMeter", 10.0));
 
-            delta += extra;
-            plugin.log("new delta = " + delta);
+            delta += moreHunger ;
+            plugin.log("Above tropopause, new hunger delta = " + delta);
 
             newLevel = oldLevel - delta;
             plugin.log("set level: " + newLevel);
             event.setFoodLevel(newLevel);
+
         }
+
+        // Meteors or no air, suffocating
+        if (height > mesopause) {
+            if (player.getHealth() >= plugin.getConfig().getInt("damageWhenHealthMin", 2)) {
+                int damage = (int)Math.ceil((height - mesopause) / plugin.getConfig().getDouble("damagePerMeter", 10.0));
+                damage = Math.max(damage, plugin.getConfig().getInt("damageMax", 10));
+
+                player.damage(damage);
+                player.setLastDamageCause(new EntityDamageEvent(player, EntityDamageEvent.DamageCause.SUFFOCATION, damage));
+                plugin.log("Above mesopause, suffocation damage = " + damage);
+            }
+        }
+
     }
 }
 
