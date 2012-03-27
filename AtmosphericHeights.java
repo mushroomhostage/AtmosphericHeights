@@ -25,7 +25,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package me.exphc.ThinnerAir;
+package me.exphc.AtmosphericHeights;
 
 import java.util.Collections;
 import java.util.List;
@@ -65,10 +65,10 @@ import net.minecraft.server.CraftingManager;
 import org.bukkit.craftbukkit.enchantments.CraftEnchantment;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
 
-class ThinnerAirListener implements Listener {
-	ThinnerAir plugin;
+class AtmosphericHeightsListener implements Listener {
+	AtmosphericHeights plugin;
 
-	public ThinnerAirListener(ThinnerAir plugin) {
+	public AtmosphericHeightsListener(AtmosphericHeights plugin) {
 		this.plugin = plugin;
 
 		Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
@@ -99,11 +99,11 @@ class ThinnerAirListener implements Listener {
     }
 }
 
-public class ThinnerAir extends JavaPlugin implements Listener {
+public class AtmosphericHeights extends JavaPlugin implements Listener {
     Logger log = Logger.getLogger("Minecraft");
 
     public void onEnable() {
-        new ThinnerAirListener(this);
+        new AtmosphericHeightsListener(this);
     }
 
     public void onDisable() {
