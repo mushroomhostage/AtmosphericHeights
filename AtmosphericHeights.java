@@ -187,21 +187,13 @@ class AtmosphericHeightsListener implements Listener {
             return;
         }
 
-        ItemStack spacesuit = getSpacesuit(player);
-
-        if (spacesuit == null) {
+        if (hasSpacesuit(player)) {
+            // absorb damage
+            damageSpacesuit(player);
+        } else {
             // exposed to the elements!
             player.setFireTicks(plugin.getConfig().getInt("fireTicks", 20*2));
-        } else {
-            // damage suit
-            // TODO
-            short damage = spacesuit.getDurability();
-
-            damage -= plugin.getConfig().getInt("spacesuitDamagePerHit", 100);
-            damage = (short)Math.min(damage, plugin.getConfig().getInt("spacesuitDamageMin", 10));
-                
-            spacesuit.setDurability(damage);
-        }
+        } 
     }
 
     private void applyOuterspace(Player player, int height) {
@@ -233,10 +225,9 @@ class AtmosphericHeightsListener implements Listener {
             && helmet.getEnchantmentLevel(RESPIRATION) >= plugin.getConfig().getInt("oxygenMaskMinLevel", 1);
     }
 
-    // Get a random piece of a player's spacesuit, or null if not wearing any
-    private ItemStack getSpacesuit(Player player) {
+    private boolean hasSpacesuit(Player player) {
         if (!plugin.getConfig().getBoolean("spacesuitEnabled", true)) {
-            return null;
+            return false;
         }
 
         PlayerInventory inventory = player.getInventory();
@@ -249,7 +240,7 @@ class AtmosphericHeightsListener implements Listener {
         if (helmet == null || chestplate == null || leggings == null || boots == null) {
             // incomplete suit
             plugin.log("incomplete suit");
-            return null;
+            return false;
         }
 
         /* TODO: tell if suit is all made of same material? all different type ids even though all diamond..
@@ -262,17 +253,43 @@ class AtmosphericHeightsListener implements Listener {
         */
         // TODO: craftable or with enchantments? protection? but could get complex, four-part suit..
 
-        // Return random part of suit to damage
-        // TODO: weights for different pieces? since provide different protection..
-        switch (random.nextInt(4)) {
-        case 0: return helmet;
-        case 1: return chestplate;
-        case 2: return leggings;
-        default:
-        case 3: return boots;
-        }
+        return true;
     }
 
+    private void damageSpacesuit(Player player) {
+        PlayerInventory inventory = player.getInventory();
+        ItemStack spacesuit;
+        int n = random.nextInt(4);
+
+        // Return random part of suit to damage
+        // TODO: weights for different pieces? since provide different protection..
+        switch (n) {
+        case 0: spacesuit = inventory.getHelmet(); break;
+        case 1: spacesuit = inventory.getChestplate(); break;
+        case 2: spacesuit = inventory.getLeggings(); break;
+        default:
+        case 3: spacesuit = inventory.getBoots(); break;
+        }
+
+        short damage = spacesuit.getDurability();
+
+        damage += plugin.getConfig().getInt("spacesuitDamagePerHit", 100);
+        // TODO: don't completely wearout?
+        //damage = (short)Math.max(damage, plugin.getConfig().getInt("spacesuitDamageMin", 10));
+
+        plugin.log("Damage = "+  damage);
+            
+        spacesuit.setDurability(damage);
+        // TODO: destroy if beyond max damage?
+
+        switch (n) {
+        case 0: inventory.setHelmet(spacesuit); break;
+        case 1: inventory.setChestplate(spacesuit); break;
+        case 2: inventory.setLeggings(spacesuit); break;
+        default:
+        case 3: inventory.setBoots(spacesuit); break;
+        }
+    }
 }
 
 public class AtmosphericHeights extends JavaPlugin implements Listener {

@@ -15,7 +15,6 @@ fireChance: 5
 fireTicks: 40
 spacesuitEnabled: true
 spacesuitDamagePerHit: 100
-spacesuitDamageMin: 10
 
 kalmanLine: 1024
 kalmanLineMessage: 'You are now entering outerspace'
