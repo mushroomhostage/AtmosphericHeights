@@ -1,0 +1,22 @@
+verbose: true
+tropopause: 128
+hungerPerMeter: 10.0
+
+mesopause: 256
+damageChance: 10
+damagePerMeter: 10.0
+damageMax: 5
+damageHealthMin: 2
+oxygenMaskEnabled: true
+oxygenMaskMinLevel: 1
+
+magnetopause: 512
+fireChance: 5
+fireTicks: 40
+spacesuitEnabled: true
+spacesuitDamagePerHit: 100
+spacesuitDamageMin: 10
+
+kalmanLine: 1024
+kalmanLineMessage: 'You are now entering outerspace'
+
