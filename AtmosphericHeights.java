@@ -145,6 +145,7 @@ class AtmosphericHeightsListener implements Listener {
 
         if (hasOxygenMask(player)) {
             plugin.log("Player "+player+" wearing oxygen mask, avoided suffocation damage "+damage);
+            return;
         }
 
         player.damage(damage);
@@ -162,10 +163,12 @@ class AtmosphericHeightsListener implements Listener {
     private boolean hasOxygenMask(Player player) {
         ItemStack helmet = player.getInventory().getHelmet();
 
+        plugin.log.info("helmet = " + helmet);
+
         return helmet != null 
             && plugin.getConfig().getBoolean("oxygenMaskEnabled", true)
             && helmet.containsEnchantment(RESPIRATION) 
-            && helmet.getEnchantmentLevel(RESPIRATION) > plugin.getConfig().getInt("oxygenMaskMinLevel", 1);
+            && helmet.getEnchantmentLevel(RESPIRATION) >= plugin.getConfig().getInt("oxygenMaskMinLevel", 1);
     }
 
     private boolean hasSpacesuit(Player player) {
