@@ -121,6 +121,19 @@ class AtmosphericHeightsListener implements Listener {
         }
     }
 
+    @EventHandler(priority=EventPriority.MONITOR, ignoreCancelled=true)
+    public void onPlayerMove(PlayerMoveEvent event) {
+        int height = event.getTo().getBlockY();
+
+        if (height > mesopause) {
+            applySuffocation(event.getPlayer(), height);
+        }
+
+        if (height > magnetopause) {
+            applyFire(event.getPlayer(), height);
+        }
+    }
+
     // Thinner air, hungrier
     private void applyHunger(Player player, FoodLevelChangeEvent event, int delta, int height, int oldLevel) {
         double moreHunger = Math.ceil((height - tropopause) / plugin.getConfig().getDouble("hungerPerMeter", 10.0));
@@ -144,7 +157,7 @@ class AtmosphericHeightsListener implements Listener {
         damage = Math.max(damage, plugin.getConfig().getInt("damageMax", 10));
 
         if (hasOxygenMask(player)) {
-            plugin.log("Player "+player+" wearing oxygen mask, avoided suffocation damage "+damage);
+            //plugin.log("Player "+player+" wearing oxygen mask, avoided suffocation damage "+damage);
             return;
         }
 
@@ -162,8 +175,6 @@ class AtmosphericHeightsListener implements Listener {
 
     private boolean hasOxygenMask(Player player) {
         ItemStack helmet = player.getInventory().getHelmet();
-
-        plugin.log.info("helmet = " + helmet);
 
         return helmet != null 
             && plugin.getConfig().getBoolean("oxygenMaskEnabled", true)
