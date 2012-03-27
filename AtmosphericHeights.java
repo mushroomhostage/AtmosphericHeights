@@ -133,6 +133,10 @@ class AtmosphericHeightsListener implements Listener {
             }
         }
 
+        // Cosmic rays, unprotected from earth's magnetic field, set aflame
+        if (height > magnetopause) {
+            player.setFireTicks(plugin.getConfig().getInt("fireTicks", 20*2));
+        }
     }
 }
 
