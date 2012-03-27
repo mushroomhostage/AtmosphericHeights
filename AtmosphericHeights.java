@@ -37,6 +37,7 @@ import java.util.Iterator;
 import java.util.logging.Logger;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Formatter;
+import java.util.Random;
 import java.lang.Byte;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -67,6 +68,7 @@ import org.bukkit.craftbukkit.inventory.CraftItemStack;
 
 class AtmosphericHeightsListener implements Listener {
 	AtmosphericHeights plugin;
+    Random random;
 
     final int tropopause, mesopause, magnetopause;
 
@@ -78,6 +80,8 @@ class AtmosphericHeightsListener implements Listener {
         magnetopause = plugin.getConfig().getInt("magnetopause", 512);
         // TODO: kalman line, 1024? = legally in outerspace
         // for inspiration see http://en.wikipedia.org/wiki/Earth%27s_atmosphere#Principal_layers
+
+        random = new Random();
 
 		Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
 	}
@@ -148,6 +152,11 @@ class AtmosphericHeightsListener implements Listener {
 
     // Meteors or no air, suffocating
     private void applySuffocation(Player player, int height) {
+        if (random.nextInt(plugin.getConfig().getInt("damageChance", 10)) != 0) {
+            // lucked out
+            return;
+        }
+        
         int damage = (int)Math.ceil((height - mesopause) / plugin.getConfig().getDouble("damagePerMeter", 10.0));
         damage = Math.max(damage, plugin.getConfig().getInt("damageMax", 10));
 
@@ -167,6 +176,10 @@ class AtmosphericHeightsListener implements Listener {
 
     // Cosmic rays, unprotected from earth's magnetic field, set aflame
     private void applyFire(Player player, int height) {
+        if (random.nextInt(plugin.getConfig().getInt("fireChance", 5)) != 0) {
+            return;
+        }
+
         player.setFireTicks(plugin.getConfig().getInt("fireTicks", 20*2));
     }
 
