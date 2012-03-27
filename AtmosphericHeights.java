@@ -70,7 +70,9 @@ class AtmosphericHeightsListener implements Listener {
 	AtmosphericHeights plugin;
     Random random;
 
-    final int tropopause, mesopause, magnetopause;
+    final int tropopause, mesopause, magnetopause, kalmanLine;
+
+    ConcurrentHashMap<Player, Boolean> inOuterspace;
 
 	public AtmosphericHeightsListener(AtmosphericHeights plugin) {
 		this.plugin = plugin;
@@ -78,10 +80,11 @@ class AtmosphericHeightsListener implements Listener {
         tropopause = plugin.getConfig().getInt("tropopause", 128);
         mesopause = plugin.getConfig().getInt("mesopause", 256);
         magnetopause = plugin.getConfig().getInt("magnetopause", 512);
-        // TODO: kalman line, 1024? = legally in outerspace
-        // for inspiration see http://en.wikipedia.org/wiki/Earth%27s_atmosphere#Principal_layers
+        kalmanLine = plugin.getConfig().getInt("kalmanLine", 1024);
 
         random = new Random();
+
+        inOuterspace = new ConcurrentHashMap<Player, Boolean>();
 
 		Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
 	}
@@ -112,16 +115,16 @@ class AtmosphericHeightsListener implements Listener {
         int height = player.getLocation().getBlockY();
 
         if (height > tropopause) {
-            applyHunger(player, event, delta, height, oldLevel);
+            applyTropo(player, event, delta, height, oldLevel);
         }
 
 
         if (height > mesopause) {
-            applySuffocation(player, height);
+            applyMeso(player, height);
         }
 
         if (height > magnetopause) {
-            applyFire(player, height);
+            applyMagneto(player, height);
         }
     }
 
@@ -130,16 +133,20 @@ class AtmosphericHeightsListener implements Listener {
         int height = event.getTo().getBlockY();
 
         if (height > mesopause) {
-            applySuffocation(event.getPlayer(), height);
+            applyMeso(event.getPlayer(), height);
         }
 
         if (height > magnetopause) {
-            applyFire(event.getPlayer(), height);
+            applyMagneto(event.getPlayer(), height);
+        }
+
+        if (height > kalmanLine) {
+            applyOuterspace(event.getPlayer(), height);
         }
     }
 
     // Thinner air, hungrier
-    private void applyHunger(Player player, FoodLevelChangeEvent event, int delta, int height, int oldLevel) {
+    private void applyTropo(Player player, FoodLevelChangeEvent event, int delta, int height, int oldLevel) {
         double moreHunger = Math.ceil((height - tropopause) / plugin.getConfig().getDouble("hungerPerMeter", 10.0));
 
         delta += moreHunger;
@@ -151,7 +158,7 @@ class AtmosphericHeightsListener implements Listener {
     }
 
     // Meteors or no air, suffocating
-    private void applySuffocation(Player player, int height) {
+    private void applyMeso(Player player, int height) {
         if (random.nextInt(plugin.getConfig().getInt("damageChance", 10)) != 0) {
             // lucked out
             return;
@@ -175,7 +182,7 @@ class AtmosphericHeightsListener implements Listener {
     }
 
     // Cosmic rays, unprotected from earth's magnetic field, set aflame
-    private void applyFire(Player player, int height) {
+    private void applyMagneto(Player player, int height) {
         if (random.nextInt(plugin.getConfig().getInt("fireChance", 5)) != 0) {
             return;
         }
@@ -195,6 +202,22 @@ class AtmosphericHeightsListener implements Listener {
                 
             spacesuit.setDurability(damage);
         }
+    }
+
+    private void applyOuterspace(Player player, int height) {
+        if (inOuterspace.containsKey(player)) {
+            return;  // already told (reset on quit)
+        }
+
+        player.sendMessage(plugin.getConfig().getString("kalmanLineMessage", "You are now entering outerspace"));
+
+        inOuterspace.put(player, true);
+    }
+
+    @EventHandler(priority=EventPriority.NORMAL, ignoreCancelled=true) 
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        // tell in outerspace next time
+        inOuterspace.remove(event.getPlayer());
     }
 
     final Enchantment RESPIRATION = Enchantment.OXYGEN;
@@ -249,6 +272,7 @@ class AtmosphericHeightsListener implements Listener {
         case 3: return boots;
         }
     }
+
 }
 
 public class AtmosphericHeights extends JavaPlugin implements Listener {
