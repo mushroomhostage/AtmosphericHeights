@@ -118,14 +118,6 @@ class AtmosphericHeightsListener implements Listener {
             applyTropo(player, event, delta, height, oldLevel);
         }
 
-
-        if (height > mesopause) {
-            applyMeso(player, height);
-        }
-
-        if (height > magnetopause) {
-            applyMagneto(player, height);
-        }
     }
 
     @EventHandler(priority=EventPriority.MONITOR, ignoreCancelled=true)
@@ -292,7 +284,7 @@ class AtmosphericHeightsListener implements Listener {
     }
 }
 
-public class AtmosphericHeights extends JavaPlugin implements Listener {
+public class AtmosphericHeights extends JavaPlugin {
     Logger log = Logger.getLogger("Minecraft");
 
     public void onEnable() {
