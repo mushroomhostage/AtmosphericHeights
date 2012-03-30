@@ -193,7 +193,7 @@ class AtmosphericHeightsListener implements Listener {
             return;  // already told (reset on quit)
         }
 
-        player.sendMessage(plugin.getConfig().getString("kalmanLineMessage", "You are now entering outerspace"));
+        player.sendMessage(plugin.getConfig().getString("kalmanLineMessage", "You are now in outer space"));
 
         // TODO: above very high elevations, reduce gravity?? no gravity? allow flying around freely without falling?
 
