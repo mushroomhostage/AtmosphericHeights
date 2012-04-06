@@ -3,7 +3,7 @@ AtmosphericHeights - a stratified atmosphere for your world
 Adds new elevation-based regions (troposphere, mesosphere, magnetosphere, and outerspace)
 to your planet with different properties.
 
-***New! [AtmosphericHeights 1.0](http://dev.bukkit.org/server-mods/atmosphericheights/files/1-atmospheric-heights-1-0/)*** - released 2012/03/27
+***[AtmosphericHeights 1.1](http://dev.bukkit.org/server-mods/atmosphericheights/files/2-atmospheric-heights-1-1/)*** - released 2012/04/05 for 1.2.5-R1.0
 
 Features:
 
