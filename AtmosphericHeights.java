@@ -70,17 +70,10 @@ class AtmosphericHeightsListener implements Listener {
 	AtmosphericHeights plugin;
     Random random;
 
-    final int tropopause, mesopause, magnetopause, kalmanLine;
-
     ConcurrentHashMap<Player, Boolean> inOuterspace;
 
 	public AtmosphericHeightsListener(AtmosphericHeights plugin) {
 		this.plugin = plugin;
-
-        tropopause = plugin.getConfig().getInt("tropopause", 128);
-        mesopause = plugin.getConfig().getInt("mesopause", 256);
-        magnetopause = plugin.getConfig().getInt("magnetopause", 512);
-        kalmanLine = plugin.getConfig().getInt("kalmanLine", 1024);
 
         random = new Random();
 
@@ -88,6 +81,23 @@ class AtmosphericHeightsListener implements Listener {
 
 		Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
 	}
+
+    private int getTropopause(Player player) {
+        return plugin.getConfig().getInt(player.getWorld().getName() + ".tropopause", 128);
+    }
+
+    private int getMesopause(Player player) {
+        return plugin.getConfig().getInt(player.getWorld().getName() + ".mesopause", 256);
+    }
+
+    private int getMagnetopause(Player player) {
+        return plugin.getConfig().getInt(player.getWorld().getName() + ".magnetopause", 512);
+    }
+
+    private int getKalmanLine(Player player) {
+        return plugin.getConfig().getInt(player.getWorld().getName() + ".kalmanLine", 1024);
+    }
+
 
     @EventHandler(priority=EventPriority.MONITOR, ignoreCancelled=true) 
     public void onFoodLevelChange(FoodLevelChangeEvent event) {
@@ -114,7 +124,7 @@ class AtmosphericHeightsListener implements Listener {
 
         int height = player.getLocation().getBlockY();
 
-        if (height > tropopause) {
+        if (height > getTropopause(player)) {
             applyTropo(player, event, delta, height, oldLevel);
         }
 
@@ -123,23 +133,26 @@ class AtmosphericHeightsListener implements Listener {
     @EventHandler(priority=EventPriority.MONITOR, ignoreCancelled=true)
     public void onPlayerMove(PlayerMoveEvent event) {
         int height = event.getTo().getBlockY();
+        Player player = event.getPlayer();
 
-        if (height > mesopause) {
-            applyMeso(event.getPlayer(), height);
+        if (height > getMesopause(player)) {
+            applyMeso(player, height);
         }
 
-        if (height > magnetopause) {
-            applyMagneto(event.getPlayer(), height);
+        if (height > getMagnetopause(player)) {
+            applyMagneto(player, height);
         }
 
-        if (height > kalmanLine) {
-            applyOuterspace(event.getPlayer(), height);
+        if (height > getKalmanLine(player)) {
+            applyOuterspace(player, height);
         }
     }
 
     // Thinner air, hungrier
     private void applyTropo(Player player, FoodLevelChangeEvent event, int delta, int height, int oldLevel) {
-        double moreHunger = Math.ceil((height - tropopause) / plugin.getConfig().getDouble("hungerPerMeter", 10.0));
+        double hungerPerMeter = plugin.getConfig().getDouble(player.getWorld().getName() + ".hungerPerMeter", 10.0);
+
+        double moreHunger = Math.ceil((height - getTropopause(player)) / hungerPerMeter);
 
         delta += moreHunger;
         plugin.log("Above tropopause, new hunger delta = " + delta);
@@ -151,15 +164,15 @@ class AtmosphericHeightsListener implements Listener {
 
     // Meteors or no air, suffocating
     private void applyMeso(Player player, int height) {
-        if (random.nextInt(plugin.getConfig().getInt("damageChance", 10)) != 0) {
+        if (random.nextInt(plugin.getConfig().getInt(player.getWorld().getName() + ".damageChance", 10)) != 0) {
             // lucked out
             return;
         }
         
-        int damage = (int)Math.ceil((height - mesopause) / plugin.getConfig().getDouble("damagePerMeter", 10.0));
-        damage = Math.max(damage, plugin.getConfig().getInt("damageMax", 10));
+        int damage = (int)Math.ceil((height - getMesopause(player)) / plugin.getConfig().getDouble(player.getWorld().getName() + ".damagePerMeter", 10.0));
+        damage = Math.max(damage, plugin.getConfig().getInt(player.getWorld().getName() + ".damageMax", 10));
 
-        if (player.getHealth() - damage < plugin.getConfig().getInt("damageHealthMin", 2)) {
+        if (player.getHealth() - damage < plugin.getConfig().getInt(player.getWorld().getName() + "damageHealthMin", 2)) {
             return; // you've been spared - can't go further
         }
 
@@ -175,7 +188,7 @@ class AtmosphericHeightsListener implements Listener {
 
     // Cosmic rays, unprotected from earth's magnetic field, set aflame
     private void applyMagneto(Player player, int height) {
-        if (random.nextInt(plugin.getConfig().getInt("fireChance", 5)) != 0) {
+        if (random.nextInt(plugin.getConfig().getInt(player.getWorld().getName() + ".fireChance", 5)) != 0) {
             return;
         }
 
@@ -184,7 +197,7 @@ class AtmosphericHeightsListener implements Listener {
             damageSpacesuit(player);
         } else {
             // exposed to the elements!
-            player.setFireTicks(plugin.getConfig().getInt("fireTicks", 20*2));
+            player.setFireTicks(plugin.getConfig().getInt(player.getWorld().getName() + ".fireTicks", 20*2));
         } 
     }
 
@@ -193,7 +206,7 @@ class AtmosphericHeightsListener implements Listener {
             return;  // already told (reset on quit)
         }
 
-        player.sendMessage(plugin.getConfig().getString("kalmanLineMessage", "You are now in outer space"));
+        player.sendMessage(plugin.getConfig().getString(player.getWorld().getName() + ".kalmanLineMessage", "You are now in outer space"));
 
         // TODO: above very high elevations, reduce gravity?? no gravity? allow flying around freely without falling?
 
@@ -209,18 +222,18 @@ class AtmosphericHeightsListener implements Listener {
     final Enchantment RESPIRATION = Enchantment.OXYGEN;
 
     private boolean hasOxygenMask(Player player) {
-        if (!plugin.getConfig().getBoolean("oxygenMaskEnabled", true)) {
+        if (!plugin.getConfig().getBoolean(player.getWorld().getName() + ".oxygenMaskEnabled", true)) {
             return false;
         }
         ItemStack helmet = player.getInventory().getHelmet();
 
         return helmet != null 
             && helmet.containsEnchantment(RESPIRATION) 
-            && helmet.getEnchantmentLevel(RESPIRATION) >= plugin.getConfig().getInt("oxygenMaskMinLevel", 1);
+            && helmet.getEnchantmentLevel(RESPIRATION) >= plugin.getConfig().getInt(player.getWorld().getName() + ".oxygenMaskMinLevel", 1);
     }
 
     private boolean hasSpacesuit(Player player) {
-        if (!plugin.getConfig().getBoolean("spacesuitEnabled", true)) {
+        if (!plugin.getConfig().getBoolean(player.getWorld().getName() + ".spacesuitEnabled", true)) {
             return false;
         }
 
@@ -267,9 +280,9 @@ class AtmosphericHeightsListener implements Listener {
 
         short damage = spacesuit.getDurability();
 
-        damage += plugin.getConfig().getInt("spacesuitDamagePerHit", 100);
+        damage += plugin.getConfig().getInt(player.getWorld().getName() + ".spacesuitDamagePerHit", 100);
         // TODO: don't completely wearout?
-        //damage = (short)Math.max(damage, plugin.getConfig().getInt("spacesuitDamageMin", 10));
+        //damage = (short)Math.max(damage, plugin.getConfig().getInt(player.getWorld().getName() + ".spacesuitDamageMin", 10));
 
         plugin.log("Damage = "+  damage);
             

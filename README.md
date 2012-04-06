@@ -40,6 +40,10 @@ Above 1024 meters, all you'll get is a message saying you entered outerspace.
 
 **verbose** (true): Log debugging information.
 
+*Per-world configuration options*: change 'world' to your world name, copying
+the section as needed for multiple worlds. If a world is omitted, the
+defaults will be used for each configuration option.
+
 **tropopause** (128): Above this elevation, hunger will be affected.
 (Disclaimer: the terminology used in this plugin is not scientifically accurate. FYI.)
 
