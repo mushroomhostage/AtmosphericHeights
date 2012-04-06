@@ -98,5 +98,7 @@ None
 Want more realism but in a completely different context? Also see 
 [RealisticChat](http://dev.bukkit.org/server-mods/realisticchat/).
 
+Inspired by [this post on /r/bukkitplugins](http://www.reddit.com/r/bukkitplugins/comments/r2a0u/thought_i_would_give_the_new_subreddit_a_whirl/).
+
 ***[Fork me on GitHub](https://github.com/mushroomhostage/AtmosphericHeights)***
 
