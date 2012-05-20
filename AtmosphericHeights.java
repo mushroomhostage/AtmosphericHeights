@@ -39,8 +39,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.Formatter;
 import java.util.Random;
 import java.lang.Byte;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.io.*;
 
 import org.bukkit.plugin.java.JavaPlugin;
@@ -70,14 +68,14 @@ class AtmosphericHeightsListener implements Listener {
 	AtmosphericHeights plugin;
     Random random;
 
-    ConcurrentHashMap<Player, Boolean> inOuterspace;
+    ConcurrentHashMap<UUID, Boolean> inOuterspace;
 
 	public AtmosphericHeightsListener(AtmosphericHeights plugin) {
 		this.plugin = plugin;
 
         random = new Random();
 
-        inOuterspace = new ConcurrentHashMap<Player, Boolean>();
+        inOuterspace = new ConcurrentHashMap<UUID, Boolean>();
 
 		Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
 	}
@@ -202,7 +200,7 @@ class AtmosphericHeightsListener implements Listener {
     }
 
     private void applyOuterspace(Player player, int height) {
-        if (inOuterspace.containsKey(player)) {
+        if (inOuterspace.containsKey(player.getUniqueId())) {
             return;  // already told (reset on quit)
         }
 
@@ -210,13 +208,13 @@ class AtmosphericHeightsListener implements Listener {
 
         // TODO: above very high elevations, reduce gravity?? no gravity? allow flying around freely without falling?
 
-        inOuterspace.put(player, true);
+        inOuterspace.put(player.getUniqueId(), true);
     }
 
     @EventHandler(priority=EventPriority.NORMAL, ignoreCancelled=true) 
     public void onPlayerQuit(PlayerQuitEvent event) {
         // tell in outerspace next time
-        inOuterspace.remove(event.getPlayer());
+        inOuterspace.remove(event.getPlayer().getUniqueId());
     }
 
     final Enchantment RESPIRATION = Enchantment.OXYGEN;
@@ -246,7 +244,7 @@ class AtmosphericHeightsListener implements Listener {
 
         if (helmet == null || chestplate == null || leggings == null || boots == null) {
             // incomplete suit
-            plugin.log("incomplete suit");
+            plugin.log("incomplete suit on "+player.getName());
             return false;
         }
 

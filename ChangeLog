@@ -1,3 +1,7 @@
+2012-05-20  1.2
+    * Fix potential memory leak / future incompatibility with HashMaps of Player
+    * Test with CraftBukkit 1.2.5-R2.0
+
 2012-04-05  1.1
     * Add multi-world support
     * New config.yml format, be sure to re-generate your config
