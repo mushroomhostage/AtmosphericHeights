@@ -15,6 +15,8 @@ Features:
 * Outerspace
 * Flexible configuration
 
+[Forum thread](http://forums.bukkit.org/threads/mech-rpg-atmosphericheights-v1-2-a-stratified-atmosphere-for-your-world-1-2-5-r2-0.76650/)
+
 ## Usage
 
 Travel *very* high up. I suggest using Boots + Power from [EnchantMore](http://dev.bukkit.org/server-mods/enchantmore/), but you can use any plugin or flying mod capable of extreme heights, it is up to you.
