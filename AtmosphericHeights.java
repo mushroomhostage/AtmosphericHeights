@@ -59,11 +59,6 @@ import org.bukkit.scheduler.*;
 import org.bukkit.enchantments.*;
 import org.bukkit.*;
 
-import net.minecraft.server.CraftingManager;
-
-import org.bukkit.craftbukkit.enchantments.CraftEnchantment;
-import org.bukkit.craftbukkit.inventory.CraftItemStack;
-
 class AtmosphericHeightsListener implements Listener {
 	AtmosphericHeights plugin;
     Random random;
